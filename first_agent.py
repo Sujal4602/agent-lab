@@ -1,4 +1,3 @@
-
 import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
@@ -6,6 +5,7 @@ from langchain_core.messages import HumanMessage
 from langchain_tavily import TavilySearch
 from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.memory import MemorySaver
 
 load_dotenv()
 
@@ -27,6 +27,8 @@ def call_model(state: MessagesState):
     response = llm_with_tools.invoke(state["messages"])
     return {"messages": [response]}
 
+memory = MemorySaver()
+
 builder = StateGraph(MessagesState)
 builder.add_node("agent", call_model)
 builder.add_node("tools", ToolNode(tools))
@@ -34,13 +36,21 @@ builder.add_edge(START, "agent")
 builder.add_conditional_edges("agent", tools_condition)
 builder.add_edge("tools", "agent")
 
-graph = builder.compile()
+graph = builder.compile(checkpointer=memory)
 
-user_input = input("You: ")
-result = graph.invoke({
-    "messages": [HumanMessage(content=user_input)]
-})
-print(result["messages"][-1].content)
+config = {"configurable": {"thread_id": "session_1"}}
+
+print("Agent ready! Type 'exit' to quit.")
+while True:
+    user_input = input("You: ")
+    if user_input.lower() == "exit":
+        break
+    result = graph.invoke(
+        {"messages": [HumanMessage(content=user_input)]},
+        config=config
+    )
+    print("Agent:", result["messages"][-1].content)
+    print()
 
 
 
