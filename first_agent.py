@@ -15,7 +15,7 @@ llm = ChatGroq(
 )
 
 search_tool = TavilySearch(
-    max_results=3,
+    max_results=5,
     tavily_api_key=os.getenv("TAVILY_API_KEY")
 )
 
@@ -36,8 +36,9 @@ builder.add_edge("tools", "agent")
 
 graph = builder.compile()
 
+user_input = input("You: ")
 result = graph.invoke({
-    "messages": [HumanMessage(content="What is the latest news about AI today?")]
+    "messages": [HumanMessage(content=user_input)]
 })
 print(result["messages"][-1].content)
 
