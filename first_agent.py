@@ -14,7 +14,7 @@ from langgraph.checkpoint.memory import MemorySaver
 load_dotenv()
 
 llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    model="llama-3.1-8b-instant",
     api_key=os.getenv("GROQ_API_KEY")
 )
 
@@ -73,23 +73,30 @@ def calculator(expression: str) -> str:
 
 tools = [search_tool, calculator]
 llm_with_tools = llm.bind_tools(tools)
-
 def call_model(state: MessagesState):
     print("Agent is thinking...")
 
     system_prompt = SystemMessage(
         content=(
-           "You are a personal multi-tool AI assistant. "
-        "Remember previous user messages in the same session and use them to answer follow-up questions. "
-        "Use calculator only for arithmetic expressions with numbers and operators. "
-        "Never use calculator for Python code, imports, shell commands, or file access. "
-        "Use Tavily search for latest or factual web information."
+            "You are a personal multi-tool AI assistant. "
+            "Use important facts shared by the user in the current session "
+            "to personalize future responses. "
+            "Remember previous user messages in the same session and use them "
+            "for follow-up questions."
         )
     )
 
-    response = llm_with_tools.invoke(
-        [system_prompt] + state["messages"]
-    )
+    last_message = state["messages"][-1].content.lower()
+
+    # Only enable tools for clear math or web-search style queries
+    if any(op in last_message for op in ["+", "-", "*", "/", "%", "**"]) or "latest" in last_message:
+        response = llm_with_tools.invoke(
+            [system_prompt] + state["messages"]
+        )
+    else:
+        response = llm.invoke(
+            [system_prompt] + state["messages"]
+        )
 
     return {"messages": [response]}
 
