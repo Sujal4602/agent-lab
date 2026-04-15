@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage
+from langchain_core.tools import tool
 from langchain_tavily import TavilySearch
 from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -19,7 +20,16 @@ search_tool = TavilySearch(
     tavily_api_key=os.getenv("TAVILY_API_KEY")
 )
 
-tools = [search_tool]
+@tool
+def calculator(expression: str) -> str:
+    """Evaluate math expressions like 25*4+10"""
+    try:
+        result = eval(expression, {"__builtins__": {}})
+        return str(result)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+tools = [search_tool, calculator]
 llm_with_tools = llm.bind_tools(tools)
 
 def call_model(state: MessagesState):
@@ -42,7 +52,7 @@ config = {"configurable": {"thread_id": "session_1"}}
 
 print("Agent ready! Type 'exit' to quit.")
 while True:
-    user_input = input("You: ")
+    user_input = input("How may i help you: ")
     if user_input.lower() == "exit":
         break
     result = graph.invoke(
@@ -51,6 +61,4 @@ while True:
     )
     print("Agent:", result["messages"][-1].content)
     print()
-
-
-
+    
