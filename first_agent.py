@@ -79,10 +79,11 @@ def call_model(state: MessagesState):
 
     system_prompt = SystemMessage(
         content=(
-            "Use calculator only for pure arithmetic expressions. "
-            "Never use calculator for numbers and operators only. "
-            "Never use calculator for Python code, imports, shell commands, or file access. "
-            "Use Tavily search for latest or factual information."
+           "You are a personal multi-tool AI assistant. "
+        "Remember previous user messages in the same session and use them to answer follow-up questions. "
+        "Use calculator only for arithmetic expressions with numbers and operators. "
+        "Never use calculator for Python code, imports, shell commands, or file access. "
+        "Use Tavily search for latest or factual web information."
         )
     )
 
