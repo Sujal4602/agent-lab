@@ -24,7 +24,7 @@ def build_agent():
     memory = get_memory()
 
     def call_llm(state):
-    system = SystemMessage(content=(
+     system = SystemMessage(content=(
         "You are a helpful conversational assistant with access to tools. "
         "ONLY use calculator_tool when user explicitly asks for a math calculation or percentage. "
         "ONLY use search_tool when user asks about real world facts, news, or current events. "
@@ -33,7 +33,7 @@ def build_agent():
         "Plain conversational text only."
         "When search_tool returns results, copy the results into your response word for word. Do not summarize, rephrase, or add anything."
     ))
-    messages = [system] + state["messages"]
+     messages = [system] + state["messages"]
     
     # force tool choice when search intent detected
     last_msg = state["messages"][-1].content.lower()
