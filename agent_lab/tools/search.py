@@ -8,9 +8,7 @@ def search_tool(query: str) -> str:
     try:
         client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
         result = client.search(query, max_results=3)
-        print("TAVILY RAW:", result)  # debug line
-        outputs = [r["content"] for r in result["results"]]
+        outputs = [r["content"][:200] for r in result["results"]]
         return "\n\n".join(outputs)
     except Exception as e:
-        print("TAVILY ERROR:", str(e))  # debug line
         return f"Search failed: {str(e)}"

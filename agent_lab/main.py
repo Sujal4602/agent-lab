@@ -4,7 +4,7 @@ THREAD_ID = "session-1"
 
 def main():
     agent = build_agent()
-    print("Agent Ready (Day 10)\n")
+    print("Agent Ready (Day 12)\n")
 
     while True:
         q = input("You: ")

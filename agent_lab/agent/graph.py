@@ -1,8 +1,9 @@
 import os
+import sqlite3
 from dotenv import load_dotenv
 from langchain_core.messages import SystemMessage
 
-load_dotenv(dotenv_path=r"C:\Users\DELL\Downloads\ai_agents\.env")
+load_dotenv()
 
 from langgraph.graph import StateGraph, MessagesState
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -10,7 +11,12 @@ from langchain_groq import ChatGroq
 
 from tools.calculator import calculator_tool
 from tools.search import search_tool
+from utils.Retry import groq_retry
+from utils.logger import get_logger
+from utils.intent_classifier import classify_intent
 from memory.memory import get_memory
+
+logger = get_logger("agent")
 
 
 def build_agent():
@@ -24,28 +30,42 @@ def build_agent():
     memory = get_memory()
 
     def call_llm(state):
-     system = SystemMessage(content=(
-        "You are a helpful conversational assistant with access to tools. "
-        "ONLY use calculator_tool when user explicitly asks for a math calculation or percentage. "
-        "ONLY use search_tool when user asks about real world facts, news, or current events. "
-        "For ALL other questions respond normally in plain text. "
-        "Never use XML tags, brackets, or special formatting in responses. "
-        "Plain conversational text only."
-        "When search_tool returns results, copy the results into your response word for word. Do not summarize, rephrase, or add anything."
-    ))
-     messages = [system] + state["messages"]
-    
-    # force tool choice when search intent detected
-    last_msg = state["messages"][-1].content.lower()
-    search_keywords = ["news", "latest", "current", "who is", "what is", "search", "find"]
-    math_keywords = ["percent", "calculate", "%", "+", "-", "*", "/"]
-    
-    if any(k in last_msg for k in search_keywords):
-        return {"messages": [llm_with_tools.invoke(messages, tool_choice={"type": "function", "function": {"name": "search_tool"}})]}
-    elif any(k in last_msg for k in math_keywords):
-        return {"messages": [llm_with_tools.invoke(messages, tool_choice={"type": "function", "function": {"name": "calculator_tool"}})]}
-    
-    return {"messages": [llm_with_tools.invoke(messages)]}
+        system = SystemMessage(content=(
+            "You are a helpful conversational assistant with access to tools. "
+            "ONLY use calculator_tool when user explicitly asks for a math calculation or percentage. "
+            "ONLY use search_tool when user asks about real world facts, news, or current events. "
+            "For ALL other questions respond normally in plain text. "
+            "Never use XML tags, brackets, or special formatting in responses. "
+            "Plain conversational text only. "
+            "When search_tool returns results, summarize them clearly in plain text."
+        ))
+
+        messages = [system] + state["messages"]
+
+        last_msg_obj = state["messages"][-1]
+        if last_msg_obj.type == "tool":
+            response = llm_with_tools.invoke(messages)
+            return {"messages": [response]}
+
+        last_msg = last_msg_obj.content
+        logger.info(f"User: {last_msg}")
+
+        @groq_retry
+        def safe_invoke(msgs, **kwargs):
+            return llm_with_tools.invoke(msgs, **kwargs)
+
+        intent = classify_intent(last_msg, llm.invoke)
+        logger.info(f"Intent: {intent}")
+
+        if intent == "search":
+            response = safe_invoke(messages, tool_choice={"type": "function", "function": {"name": "search_tool"}})
+        elif intent == "math":
+            response = safe_invoke(messages, tool_choice={"type": "function", "function": {"name": "calculator_tool"}})
+        else:
+            response = safe_invoke(messages)
+
+        logger.info(f"Agent: {response.content}")
+        return {"messages": [response]}
 
     builder = StateGraph(MessagesState)
     builder.add_node("llm", call_llm)
