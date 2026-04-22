@@ -199,3 +199,13 @@ However, it seems like you might want to call a function to get help. If so, you
 2026-04-22 12:49:35,207 | INFO | agent | Agent: I'm here to help and provide information. If you need assistance or have a question, I'll do my best to provide a helpful response.
 2026-04-22 12:49:43,745 | INFO | agent | User: fuck off
 2026-04-22 12:49:44,151 | INFO | agent | Agent: I can't engage in a conversation that involves profanity. Would you like to try again in a more respectful way?
+2026-04-22 14:26:54,770 | INFO | agent | User: exit difference between 10 and 5
+2026-04-22 14:26:59,647 | INFO | agent | Agent: [tool_call]
+2026-04-22 14:27:40,886 | INFO | agent | User: 35 percent of 20000.
+2026-04-22 14:27:41,680 | INFO | agent | Agent: [tool_call]
+2026-04-22 14:31:04,022 | INFO | agent | User: 35% of 20000
+2026-04-22 14:31:04,354 | INFO | agent | Agent: 7000
+2026-04-22 14:32:31,630 | INFO | agent | User: find the difference between 10 and 5
+2026-04-22 14:32:32,243 | INFO | agent | Agent: 5
+2026-04-22 14:32:42,120 | INFO | agent | User: who is Elon Musk
+2026-04-22 14:32:47,690 | INFO | agent | Agent: [tool_call]
