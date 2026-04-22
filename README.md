@@ -1,23 +1,55 @@
 # agent-lab
 
-Building AI agents and automation workflows.
+Building AI agents from scratch. Each project ships a working, tested agent.
 
-## Projects
+---
 
-### Personal AI Assistant Agent (In Progress)
-- Web search capability
-- Conversation memory
-- Real-time data fetching
+## Project 1 — Personal AI Assistant Agent
 
-## Tech Stack
+A CLI-based conversational agent with tool calling, web search, and persistent memory across sessions.
+
+**What it does**
+- Answers math questions via calculator tool
+- Searches the web for real-world facts via Tavily
+- Remembers conversation history across sessions (SQLite)
+- Trims history to prevent token bloat (last 20 messages sent to LLM)
+
+**Stack**
 - Python
-- LangChain
-- LangGraph
-- Groq (Llama 3.3)
-- Tavily Search API
+- LangGraph — agent state machine
+- LangChain — tool binding
+- Groq (llama-3.3-70b-versatile) — LLM
+- Tavily — web search
+- SQLite — persistent memory
+- Tenacity — retry on rate limits
 
-## Setup
-1. Clone the repo
-2. Install dependencies: `pip install langchain langgraph langchain-groq langchain-tavily python-dotenv`
-3. Create `.env` file with your API keys
-4. Run: `python first_agent.py`
+**Setup**
+```bash
+git clone https://github.com/Sujal4602/agent-lab
+cd agent-lab
+python -m venv venv
+venv\Scripts\activate        # Windows
+pip install -r requirements.txt
+```
+
+Create `.env` file:
+```
+GROQ_API_KEY=your_key
+TAVILY_API_KEY=your_key
+```
+
+Run:
+```bash
+python main.py
+```
+
+**Usage**
+```
+You: who is Elon Musk
+Agent: Elon Musk is...
+
+You: what is 35% of 20000
+Agent: 7000.0
+
+You: exit
+```
