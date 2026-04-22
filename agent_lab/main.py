@@ -4,10 +4,13 @@ THREAD_ID = "session-1"
 
 def main():
     agent = build_agent()
-    print("Agent Ready (Day 12)\n")
+    print("Agent Ready (Day 13)\n")
 
     while True:
-        q = input("You: ")
+        q = input("You: ").strip()
+        if not q:
+            print("(empty input, try again)\n")
+            continue
         if q.lower() == "exit":
             break
 

@@ -13,7 +13,6 @@ from tools.calculator import calculator_tool
 from tools.search import search_tool
 from utils.Retry import groq_retry
 from utils.logger import get_logger
-from utils.intent_classifier import classify_intent
 from memory.memory import get_memory
 
 logger = get_logger("agent")
@@ -31,13 +30,12 @@ def build_agent():
 
     def call_llm(state):
         system = SystemMessage(content=(
-            "You are a helpful conversational assistant with access to tools. "
-            "ONLY use calculator_tool when user explicitly asks for a math calculation or percentage. "
-            "ONLY use search_tool when user asks about real world facts, news, or current events. "
-            "For ALL other questions respond normally in plain text. "
-            "Never use XML tags, brackets, or special formatting in responses. "
-            "Plain conversational text only. "
-            "When search_tool returns results, summarize them clearly in plain text."
+            'You are a helpful assistant with access to two tools: calculator_tool and search_tool. '
+            'Use calculator_tool for any math, arithmetic, or percentage calculation. '
+            'Use search_tool for any question about real people, current events, or world facts. '
+            'For greetings, personal questions, or memory recall — respond directly without tools. '
+            'When tool results are available, base your answer ONLY on those results. '
+            'Plain conversational text only. No XML tags.'
         ))
 
         messages = [system] + state["messages"]
@@ -51,20 +49,13 @@ def build_agent():
         logger.info(f"User: {last_msg}")
 
         @groq_retry
-        def safe_invoke(msgs, **kwargs):
-            return llm_with_tools.invoke(msgs, **kwargs)
+        def safe_invoke(msgs):
+            return llm_with_tools.invoke(msgs)
 
-        intent = classify_intent(last_msg, llm.invoke)
-        logger.info(f"Intent: {intent}")
+        response = safe_invoke(messages)
 
-        if intent == "search":
-            response = safe_invoke(messages, tool_choice={"type": "function", "function": {"name": "search_tool"}})
-        elif intent == "math":
-            response = safe_invoke(messages, tool_choice={"type": "function", "function": {"name": "calculator_tool"}})
-        else:
-            response = safe_invoke(messages)
-
-        logger.info(f"Agent: {response.content}")
+        log_content = response.content if response.content else "[tool_call]"
+        logger.info(f"Agent: {log_content}")
         return {"messages": [response]}
 
     builder = StateGraph(MessagesState)
