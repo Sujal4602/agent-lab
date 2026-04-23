@@ -4,7 +4,7 @@ THREAD_ID = "session-1"
 
 def main():
     agent = build_agent()
-    print("Agent Ready (Day 13)\n")
+    print("Personal AI Assistant v1.0 | Type 'exit' to quit\n")
 
     while True:
         q = input("You: ").strip()
